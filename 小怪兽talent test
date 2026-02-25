@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搞钱天赋测试 - 发现你的天选职业</title>
+    <style>
+        :root {
+            --primary-gold: #fbbf24;
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent-orange: #ea580c;
+        }
+
+        body { 
+            margin: 0; 
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; 
+            background: var(--bg-dark); 
+            color: #fff; 
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container { 
+            width: 100%;
+            max-width: 500px; 
+            padding: 20px; 
+            text-align: center; 
+            position: relative;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            display: none;
+            width: 100%;
+            height: 4px;
+            background: #334155;
+            margin-bottom: 30px;
+            border-radius: 2px;
+        }
+        #progress-inner {
+            width: 0%;
+            height: 100%;
+            background: var(--primary-gold);
+            transition: width 0.3s;
+        }
+
+        /* 封面样式 */
+        .header { margin-top: 60px; }
+        .title { font-size: 32px; color: var(--primary-gold); font-weight: bold; line-height: 1.2; }
+        .subtitle { font-size: 16px; color: #94a3b8; margin-top: 15px; letter-spacing: 1px; }
+        
+        .btn-start { 
+            background: linear-gradient(135deg, #f59e0b, #ea580c); 
+            border: none; 
+            padding: 16px 60px; 
+            border-radius: 50px; 
+            color: white; 
+            font-size: 18px; 
+            font-weight: bold;
+            margin-top: 60px; 
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(234, 88, 12, 0.3);
+            transition: transform 0.2s;
+        }
+        .btn-start:active { transform: scale(0.95); }
+
+        /* 题目盒子 */
+        .question-box { 
+            display: none; 
+            text-align: left;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #q-text { font-size: 20px; font-weight: bold; margin-bottom: 30px; line-height: 1.5; color: #f8fafc; }
+        
+        .option { 
+            background: var(--card-bg); 
+            padding: 18px 20px; 
+            margin: 15px 0; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            font-size: 16px;
+        }
+        .option:hover { background: #334155; border-color: var(--primary-gold); }
+        .option:active { background: var(--primary-gold); color: #000; }
+
+        /* 加载过渡 */
+        #loading {
+            display: none;
+            margin-top: 100px;
+        }
+        .spinner {
+            width: 50px; height: 50px; border: 5px solid #334155; border-top-color: var(--primary-gold);
+            border-radius: 50%; animation: spin 1s infinite linear; margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* 结果页海报 */
+        #result {
+            display: none;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 24px;
+            padding: 40px 20px;
+            margin-top: 20px;
+            border: 2px solid var(--primary-gold);
+            animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .result-tag { color: var(--primary-gold); font-size: 14px; text-transform: uppercase; letter-spacing: 2px; }
+        .result-title { font-size: 42px; font-weight: 900; margin: 10px 0; background: linear-gradient(to right, #fff, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .result-desc { color: #cbd5e1; line-height: 1.6; text-align: left; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin: 20px 0; }
+        .career-box { background: var(--primary-gold); color: #000; padding: 15px; border-radius: 12px; font-weight: bold; margin-top: 20px; }
+
+        .footer-info { margin-top: 30px; font-size: 12px; color: #64748b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progress-bar" id="pb"><div id="progress-inner"></div></div>
+
+        <div id="cover">
+            <div class="header">
+                <div class="title">搞钱天赋测试<br>你的天选职业是什么？</div>
+                <div class="subtitle">深度解析性格底色 · 锁定财富赛道</div>
+            </div>
+            <div style="margin-top: 40px;">
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=money" width="120" style="filter: drop-shadow(0 0 10px #fbbf24);">
+            </div>
+            <p style="margin-top: 30px; font-size: 14px; color: #64748b;">已有 852,109 人通过算法匹配成功</p>
+            <button class="btn-start" onclick="startTest()">立即测算</button>
+        </div>
+
+        <div id="quiz" class="question-box">
+            <p id="q-text"></p>
+            <div id="options"></div>
+        </div>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <p style="margin-top: 20px; color: var(--primary-gold);">正在通过 AI 大数据分析你的财富人格...</p>
+        </div>
+
+        <div id="result">
+            <div class="result-tag">Your Money DNA is</div>
+            <div class="result-title" id="res-name"></div>
+            <div class="result-desc" id="res-desc"></div>
+            <div style="text-align: left; font-size: 14px; color: var(--primary-gold); margin-left: 5px;">★ 天选搞钱职业：</div>
+            <div class="career-box" id="res-career"></div>
+            <button class="btn-start" style="margin-top: 40px; width: 100%;" onclick="location.reload()">重新测试</button>
+            <p class="footer-info">长按截屏保存，开启你的暴富之路</p>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "当你手头有一笔闲钱想投资，你最先看重什么？", options: [
+                { t: "底层逻辑和行业数据", type: "A" },
+                { t: "有没有靠谱的朋友内部带路", type: "B" },
+                { t: "这个项目够不够酷，有没有未来感", type: "C" },
+                { t: "本金安全，是否有稳定的现金流", type: "D" }
+            ]},
+            { q: "在团队中，哪种夸奖会让你觉得最有成就感？", options: [
+                { t: "“你一眼就看出了问题的核心”", type: "A" },
+                { t: "“没你真不行，大家都能被你搞定”", type: "B" },
+                { t: "“你的点子简直是神来之笔”", type: "C" },
+                { t: "“交给你办，我一百个放心”", type: "D" }
+            ]},
+            { q: "如果穿越回10年前，你会选择如何致富？", options: [
+                { t: "研究比特币逻辑，逢低买入长期持有", type: "A" },
+                { t: "混进顶级风投圈，积累人脉资源", type: "B" },
+                { t: "提前布局短视频，做第一批头部博主", type: "C" },
+                { t: "在核心地段买房，稳扎稳打经营生意", type: "D" }
+            ]},
+            { q: "你最理想的搞钱状态是？", options: [
+                { t: "运筹帷幄，靠大脑认知降维打击", type: "A" },
+                { t: "谈笑间资源对齐，各方共赢", type: "B" },
+                { t: "把自己热爱的事物变成高价值IP", type: "C" },
+                { t: "建立一套完美的系统自动运转", type: "D" }
+            ]}
+        ];
+
+        let currentIdx = 0;
+        let scores = { A: 0, B: 0, C: 0, D: 0 };
+
+        function startTest() {
+            document.getElementById('cover').style.display = 'none';
+            document.getElementById('pb').style.display = 'block';
+            document.getElementById('quiz').style.display = 'block';
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentIdx];
+            document.getElementById('q-text').innerText = `${currentIdx + 1}. ${q.q}`;
+            const optContainer = document.getElementById('options');
+            optContainer.innerHTML = '';
+            q.options.forEach(opt => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.innerText = opt.t;
+                div.onclick = () => selectOption(opt.type);
+                optContainer.appendChild(div);
+            });
+            document.getElementById('progress-inner').style.width = ((currentIdx / questions.length) * 100) + '%';
+        }
+
+        function selectOption(type) {
+            scores[type]++;
+            currentIdx++;
+            if (currentIdx < questions.length) {
+                showQuestion();
+            } else {
+                showLoading();
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('quiz').style.display = 'none';
+            document.getElementById('pb').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            setTimeout(showResult, 2000);
+        }
+
+        function showResult() {
+            document.getElementById('loading').style.display = 'none';
+            const resultDiv = document.getElementById('result');
+            resultDiv.display = 'block';
+            
+            // 计算最高分
+            const winner = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            
+            const data = {
+                A: { name: "降维狙击手", desc: "你拥有极强的逻辑穿透力。你搞钱不靠体力，而是靠‘认知差’。你能在大众疯狂时保持冷静，在混乱中发现规律。只要你沉下心钻研，你就是那个制定游戏规则的人。", career: "量化交易员 / 战略咨询 / 程序员 / 风险投资人" },
+                B: { name: "超级连接器", desc: "你的直觉在于‘人’。你天生就知道资源该如何错配才能产生价值。财富对你而言不是赚来的，而是通过人际网流动过来的。你就是那个掌控局面的隐形推手。", career: "商务拓展(BD) / 顶流经纪人 / 公关专家 / 资源整合商人" },
+                C: { name: "灵感造物主", desc: "你讨厌平庸，你的灵魂自带审美红利。你的钱藏在你的创意和表达欲里。在情绪价值稀缺的年代，你的独特性就是最硬的通货。你适合赚‘溢价’的钱。", career: "个人IP博主 / 创意总监 / 独立开发者 / 艺术策展人" },
+                D: { name: "财富建筑师", desc: "你是最稳健的执行者。你信奉闭环和复利。别人在寻找捷径时，你在打磨系统。你赚的是‘信任’和‘确定性’的钱，虽然起步慢，但你的财富雪球会越滚越大。", career: "项目经理 / 高级运营 / 财务专家 / 连锁生意主" }
+            };
+
+            document.getElementById('res-name').innerText = data[winner].name;
+            document.getElementById('res-desc').innerText = data[winner].desc;
+            document.getElementById('res-career').innerText = data[winner].career;
+            
+            resultDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
